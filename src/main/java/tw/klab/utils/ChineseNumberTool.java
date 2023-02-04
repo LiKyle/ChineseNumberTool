@@ -149,6 +149,9 @@ public class ChineseNumberTool {
         }
     }
 
+    /**
+     * 內部轉換數字用的，雖然預留了國字大寫數字的轉換，但目前還沒正式支援國字大寫。
+     */
     private static int change(char c) {
         switch (c) {
             case '零':
