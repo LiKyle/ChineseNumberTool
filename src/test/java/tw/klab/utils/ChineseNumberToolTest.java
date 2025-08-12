@@ -54,4 +54,18 @@ class ChineseNumberToolTest {
     void chineseCharToArabicHandlesChineseNegative() {
         assertEquals("-5", ChineseNumberTool.chineseCharToArabic("負五"));
     }
+
+    @Test
+    void chineseNumeralToArabicHandlesLargeNumber() {
+        Optional<Integer> value = ChineseNumberTool.chineseNumeralToArabic("一億七千萬零七十");
+        assertTrue(value.isPresent());
+        assertEquals(170000070, value.get().intValue());
+    }
+
+    @Test
+    void parseHandlesLargeNumber() {
+        String input = "一億七千萬零七十";
+        String expected = "170000070";
+        assertEquals(expected, ChineseNumberTool.parse(input));
+    }
 }
