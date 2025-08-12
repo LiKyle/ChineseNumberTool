@@ -56,7 +56,7 @@ public class ChineseNumberTool {
             var word = mtc.group();
             var nums = word.split("點");
             var arabicOpt = chineseNumeralToArabic(nums[0]);
-            if (nums.length >= 2) {
+            if (arabicOpt.isPresent() && nums.length >= 2) {
                 var dot = chineseCharToArabic(nums[1]);
                 if (dot.length() > 0) {
                     var t = String.format("%d.%s", arabicOpt.get(), dot);
