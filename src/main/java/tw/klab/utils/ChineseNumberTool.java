@@ -2,7 +2,6 @@ package tw.klab.utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -16,11 +15,6 @@ public class ChineseNumberTool {
     // 支援到「億」單位並允許可選的負號（- 或「負」）
     private static final String regexStr = "([-負]?十?(?:[零一二兩三四五六七八九][十百千萬億]?億?萬?)+點?[零一二三四五六七八九]*)";
     private static final Pattern pattern = Pattern.compile(regexStr);
-    private static final Map<Character, Character> nextUnit = Map.of(
-        '萬', '千',
-        '千', '百',
-        '百', '十');
-
     private static final List<Character> chineseNumerals = List.of(
         '零', '一', '二', '三', '四', '五', '六', '七', '八', '九');
 
@@ -106,65 +100,63 @@ public class ChineseNumberTool {
             negative = true;
             str = str.substring(1);
         }
-        if (str.startsWith("十")) {
-            str = "一" + str;
-        }
-        var num = 0;
-        var reg = -1;
-        char lastUnit = 0;
-        for (char c : str.toCharArray()) {
-            int tmp = change(c);
-            if (tmp == 0) {
-                lastUnit = 0;
-                continue;
-            } else if (tmp >= 0 && reg < 0) {
-                reg = tmp;
-            } else if (reg >= 0) {
-                int acc = times(c, reg);
-                if (acc == -1) {
-                    return Optional.empty();
-                }
-                lastUnit = c;
-                num += acc;
-                reg = -1;
-            } else if (c == '萬' || c == '億') {
-                num = times(c, num);
-            } else {
-                return Optional.empty();
-            }
-        }
-        if (reg > 0) {
-            if (lastUnit != 0 && nextUnit.containsKey(lastUnit)) {
-                reg = times(nextUnit.get(lastUnit), reg);
-            }
-            num += reg;
-        }
-        return Optional.of(negative ? -num : num);
-    }
 
-    private static int times(char c, int num) {
-        int abs = Math.abs(num);
-        int rst;
-        switch (c) {
-            case '十':
-                rst = abs * 10;
-                break;
-            case '百':
-                rst = abs * 100;
-                break;
-            case '千':
-                rst = abs * 1000;
-                break;
-            case '萬':
-                rst = abs * 10000;
-                break;
-            case '億':
-                rst = abs * 100000000;
-                break;
-            default:
-                return -1;
+        int result = 0;   // 最終結果
+        int section = 0;  // 當前節（萬、億之前的部分）
+        int number = 0;   // 當前數字
+
+        for (char c : str.toCharArray()) {
+            int digit = change(c);
+            if (digit >= 0) {
+                number = digit;
+                continue;
+            }
+            switch (c) {
+                case '十':
+                    if (number == 0) {
+                        number = 1;
+                    }
+                    section += number * 10;
+                    number = 0;
+                    break;
+                case '百':
+                    if (number == 0) {
+                        number = 1;
+                    }
+                    section += number * 100;
+                    number = 0;
+                    break;
+                case '千':
+                    if (number == 0) {
+                        number = 1;
+                    }
+                    section += number * 1000;
+                    number = 0;
+                    break;
+                case '萬':
+                    section += number;
+                    result += section * 10000;
+                    section = 0;
+                    number = 0;
+                    break;
+                case '億':
+                    section += number;
+                    result += section * 100000000;
+                    section = 0;
+                    number = 0;
+                    break;
+                case '零':
+                    // 忽略
+                    break;
+                default:
+                    return Optional.empty();
+            }
         }
-        return num < 0 ? -rst : rst;
+
+        section += number;
+        result += section;
+
+        return Optional.of(negative ? -result : result);
     }
 
     private static int change(char c) {
