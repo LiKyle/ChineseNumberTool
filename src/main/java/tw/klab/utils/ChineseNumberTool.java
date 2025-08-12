@@ -109,37 +109,60 @@ public class ChineseNumberTool {
         if (str.startsWith("十")) {
             str = "一" + str;
         }
-        var num = 0;
-        var reg = -1;
-        char lastUnit = 0;
+
+        int result = 0;     // overall result
+        int section = 0;    // current section less than 10000
+        int digit = -1;     // pending digit
+
         for (char c : str.toCharArray()) {
-            int tmp = change(c);
-            if (tmp == 0) {
-                lastUnit = 0;
+            int n = change(c);
+            if (n > 0) {              // numeral
+                digit = n;
                 continue;
-            } else if (tmp >= 0 && reg < 0) {
-                reg = tmp;
-            } else if (reg >= 0) {
-                int acc = times(c, reg);
-                if (acc == -1) {
+            }
+
+            switch (c) {
+                case '零':
+                    digit = -1;
+                    break;
+                case '十':
+                case '百':
+                case '千':
+                    if (digit < 0) {
+                        digit = 1;
+                    }
+                    int smallUnit = times(c, 1);
+                    if (smallUnit < 0) {
+                        return Optional.empty();
+                    }
+                    section += digit * smallUnit;
+                    digit = -1;
+                    break;
+                case '萬':
+                case '億':
+                    if (digit >= 0) {
+                        section += digit;
+                        digit = -1;
+                    }
+                    int bigUnit = times(c, 1);
+                    if (bigUnit < 0) {
+                        return Optional.empty();
+                    }
+                    section *= bigUnit;
+                    result += section;
+                    section = 0;
+                    break;
+                default:
                     return Optional.empty();
-                }
-                lastUnit = c;
-                num += acc;
-                reg = -1;
-            } else if (c == '萬' || c == '億') {
-                num = times(c, num);
-            } else {
-                return Optional.empty();
             }
         }
-        if (reg > 0) {
-            if (lastUnit != 0 && nextUnit.containsKey(lastUnit)) {
-                reg = times(nextUnit.get(lastUnit), reg);
-            }
-            num += reg;
+
+        if (digit >= 0) {
+            section += digit;
         }
-        return Optional.of(negative ? -num : num);
+        result += section;
+
+        return Optional.of(negative ? -result : result);
     }
 
     private static int times(char c, int num) {

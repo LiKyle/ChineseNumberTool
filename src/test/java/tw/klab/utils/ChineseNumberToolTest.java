@@ -37,6 +37,13 @@ class ChineseNumberToolTest {
     }
 
     @Test
+    void parseHandlesLargeUnitsWithoutRemultiplying() {
+        String input = "五億七千萬零七十";
+        String expected = "570000070";
+        assertEquals(expected, ChineseNumberTool.parse(input));
+    }
+
+    @Test
     void chineseNumeralToArabicReturnsNegative() {
         Optional<Integer> value = ChineseNumberTool.chineseNumeralToArabic("-一億零三萬");
         assertTrue(value.isPresent());
