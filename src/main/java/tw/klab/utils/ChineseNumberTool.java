@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
  */
 public class ChineseNumberTool {
 
-    // 支援到「億」單位並允許可選的負號
-    private static final String regexStr = "(-?十?(?:[零一二兩三四五六七八九][十百千萬億]?億?萬?)+點?[零一二三四五六七八九]*)";
+    // 支援到「億」單位並允許可選的負號（- 或「負」）
+    private static final String regexStr = "([-負]?十?(?:[零一二兩三四五六七八九][十百千萬億]?億?萬?)+點?[零一二三四五六七八九]*)";
     private static final Pattern pattern = Pattern.compile(regexStr);
     private static final Map<Character, Character> nextUnit = Map.of(
         '萬', '千',
@@ -79,6 +79,10 @@ public class ChineseNumberTool {
     public static String chineseCharToArabic(String str) {
         var sb = new StringBuilder();
         for (var c : str.toCharArray()) {
+            if (c == '負') {
+                sb.append('-');
+                continue;
+            }
             var i = chineseNumerals.indexOf(c);
             if (i >= 0) {
                 sb.append(i);
@@ -98,7 +102,7 @@ public class ChineseNumberTool {
      */
     public static Optional<Integer> chineseNumeralToArabic(String str) {
         boolean negative = false;
-        if (str.startsWith("-")) {
+        if (str.startsWith("-") || str.startsWith("負")) {
             negative = true;
             str = str.substring(1);
         }
