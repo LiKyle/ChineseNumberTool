@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
  */
 public class ChineseNumberTool {
 
-    private static final String regexStr = "(十?(?:[零一二兩三四五六七八九][十百千萬]?萬?)+點?[零一二三四五六七八九]*)";
+    // 支援到「億」單位並允許可選的負號
+    private static final String regexStr = "(-?十?(?:[零一二兩三四五六七八九][十百千萬億]?億?萬?)+點?[零一二三四五六七八九]*)";
     private static final Pattern pattern = Pattern.compile(regexStr);
     private static final Map<Character, Character> nextUnit = Map.of(
         '萬', '千',
@@ -43,7 +44,7 @@ public class ChineseNumberTool {
      * 將字串中口語表達的中文數字全部轉為阿拉伯數字。例如輸入：
      * <code>"序號十八號，身高一百零五點七二公分，重量三千兩百五十七點三九公斤，身價五千一百萬"</code>，
      * 將會返回<code>"序號18號，身高105.72公分，重量3257.39公斤，身價51000000"</code>。
-     * 最高只支援到千萬，無法處理億的單位。
+     * 支援到億的單位並可處理負數。
      * <br><br>
      * 如果不需要處理口語表達，只需要一對一的將中文數字轉為阿拉伯數字，可以使用 {@link #chineseCharToArabic(String)}。
      * @param str
@@ -96,6 +97,11 @@ public class ChineseNumberTool {
      * @return 如果轉換成功，返回阿拉伯數字
      */
     public static Optional<Integer> chineseNumeralToArabic(String str) {
+        boolean negative = false;
+        if (str.startsWith("-")) {
+            negative = true;
+            str = str.substring(1);
+        }
         if (str.startsWith("十")) {
             str = "一" + str;
         }
@@ -129,24 +135,32 @@ public class ChineseNumberTool {
             }
             num += reg;
         }
-        return Optional.of(num);
+        return Optional.of(negative ? -num : num);
     }
 
     private static int times(char c, int num) {
+        int abs = Math.abs(num);
+        int rst;
         switch (c) {
             case '十':
-                return num * 10;
+                rst = abs * 10;
+                break;
             case '百':
-                return num * 100;
+                rst = abs * 100;
+                break;
             case '千':
-                return num * 1000;
+                rst = abs * 1000;
+                break;
             case '萬':
-                return num * 10000;
+                rst = abs * 10000;
+                break;
             case '億':
-                return num * 100000000;
+                rst = abs * 100000000;
+                break;
             default:
                 return -1;
         }
+        return num < 0 ? -rst : rst;
     }
 
     private static int change(char c) {

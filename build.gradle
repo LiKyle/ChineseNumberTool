@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'com.github.mrsarm.jshell.plugin' version '1.2.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 用 BOM 鎖定版本，避免不同 JUnit 模組版本衝突
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+
+    // Gradle 9 需要顯式加這個
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
